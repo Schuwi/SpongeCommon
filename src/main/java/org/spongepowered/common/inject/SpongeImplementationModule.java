@@ -104,8 +104,8 @@ public class SpongeImplementationModule extends PrivateModule {
 
     @Provides
     @Singleton
-    SpongeCommandManager commandManager(final Logger logger, final Game game) {
-        return new SpongeCommandManager(logger, new SpongeCommandDisambiguator(game));
+    SpongeCommandManager commandManager(final Logger logger) {
+        return new SpongeCommandManager(logger, new SpongeCommandDisambiguator());
     }
 
 }

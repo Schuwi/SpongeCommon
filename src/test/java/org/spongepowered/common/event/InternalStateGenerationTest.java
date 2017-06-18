@@ -57,7 +57,7 @@ import java.lang.reflect.Modifier;
 import java.util.Optional;
 
 @RunWith(LaunchWrapperTestRunner.class)
-public class SnapshotGenerationTest extends InjectedTest {
+public class InternalStateGenerationTest extends InjectedTest {
 
     private Entity entity;
     private SpawnEntityEvent event;

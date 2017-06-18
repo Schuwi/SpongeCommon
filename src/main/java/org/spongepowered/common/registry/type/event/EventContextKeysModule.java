@@ -28,6 +28,8 @@ import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 import org.spongepowered.api.block.BlockSnapshot;
+import org.spongepowered.api.command.CommandSource;
+import org.spongepowered.api.entity.Entity;
 import org.spongepowered.api.entity.living.player.Player;
 import org.spongepowered.api.entity.living.player.User;
 import org.spongepowered.api.entity.projectile.source.ProjectileSource;
@@ -44,6 +46,8 @@ import org.spongepowered.api.profile.GameProfile;
 import org.spongepowered.api.registry.AdditionalCatalogRegistryModule;
 import org.spongepowered.api.registry.util.RegisterCatalog;
 import org.spongepowered.api.service.ServiceManager;
+import org.spongepowered.api.service.permission.Subject;
+import org.spongepowered.api.world.Location;
 import org.spongepowered.api.world.World;
 import org.spongepowered.common.event.SpongeEventContextKey;
 import org.spongepowered.common.registry.type.AbstractPrefixAlternateCatalogTypeRegistryModule;
@@ -102,6 +106,10 @@ public final class EventContextKeysModule
         createKey("sponge:entity_hit", "Entity Hit", BlockSnapshot.class);
         createKey("sponge:used_item", "Used Item", ItemStackSnapshot.class);
         createKey("sponge:plugin", "Plugin", PluginContainer.class);
+        createKey("sponge:command_source", "Explicit Command Source", CommandSource.class);
+        createKey("sponge:command_location", "Explicit Command Location", Location.class);
+        createKey("sponge:command_entity", "Explicit Command Entity", Entity.class);
+        createKey("sponge:command_permission_subject", "Explicit Command Permission Subject", Subject.class);
     }
 
     private void createKey(String id, String name, Class<?> usedClass) {
