@@ -49,6 +49,7 @@ import org.spongepowered.api.item.inventory.Inventory;
 import org.spongepowered.api.item.inventory.ItemStack;
 import org.spongepowered.api.item.inventory.equipment.EquipmentType;
 import org.spongepowered.api.item.inventory.equipment.EquipmentTypes;
+import org.spongepowered.api.item.inventory.type.CarriedInventory;
 import org.spongepowered.api.util.RespawnLocation;
 import org.spongepowered.common.SpongeImpl;
 import org.spongepowered.common.data.nbt.CustomDataNbtUtil;
@@ -227,8 +228,8 @@ public class SpongeUser implements ArmorEquipable, Tamer, DataSerializable, Carr
     }
 
     @Override
-    public Inventory getInventory() {
-        return this.getForInventory(Player::getInventory, u -> ((Inventory) u.inventory));
+    public CarriedInventory<?> getInventory() {
+        return this.getForInventory(Player::getInventory, u -> ((CarriedInventory) u.inventory));
     }
 
 

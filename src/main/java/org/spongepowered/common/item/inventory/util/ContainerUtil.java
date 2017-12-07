@@ -450,8 +450,8 @@ public final class ContainerUtil {
                         }
 
                         @Override
-                        public Inventory getInventory() {
-                            return ((Inventory) slot.inventory);
+                        public CarriedInventory<?> getInventory() {
+                            return ((CarriedInventory) container);
                         }
                     };
                 }
