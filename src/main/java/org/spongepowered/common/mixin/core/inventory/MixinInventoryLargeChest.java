@@ -28,34 +28,35 @@ import net.minecraft.inventory.IInventory;
 import net.minecraft.inventory.InventoryLargeChest;
 import net.minecraft.item.ItemStack;
 import net.minecraft.world.ILockableContainer;
-import org.spongepowered.api.block.tileentity.carrier.TileEntityCarrier;
+import org.spongepowered.api.block.tileentity.TileEntity;
+import org.spongepowered.api.item.inventory.Carrier;
 import org.spongepowered.api.item.inventory.Inventory;
+import org.spongepowered.api.item.inventory.MultiBlockCarrier;
 import org.spongepowered.api.item.inventory.type.CarriedInventory;
+import org.spongepowered.api.util.Direction;
+import org.spongepowered.api.world.Location;
+import org.spongepowered.api.world.World;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
-import org.spongepowered.asm.mixin.injection.At;
-import org.spongepowered.asm.mixin.injection.Inject;
-import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.common.item.inventory.adapter.InventoryAdapter;
 import org.spongepowered.common.item.inventory.adapter.impl.MinecraftInventoryAdapter;
 import org.spongepowered.common.item.inventory.lens.Fabric;
 import org.spongepowered.common.item.inventory.lens.Lens;
 import org.spongepowered.common.item.inventory.lens.ReusableLensProvider;
 import org.spongepowered.common.item.inventory.lens.SlotProvider;
-import org.spongepowered.common.item.inventory.lens.impl.MinecraftFabric;
-import org.spongepowered.common.item.inventory.lens.impl.RealLens;
 import org.spongepowered.common.item.inventory.lens.impl.ReusableLens;
 import org.spongepowered.common.item.inventory.lens.impl.collections.SlotCollection;
-import org.spongepowered.common.item.inventory.lens.impl.fabric.CompoundFabric;
-import org.spongepowered.common.item.inventory.lens.impl.fabric.IInventoryFabric;
-import org.spongepowered.common.item.inventory.lens.impl.minecraft.BrewingStandInventoryLens;
 import org.spongepowered.common.item.inventory.lens.impl.minecraft.LargeChestInventoryLens;
 
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 import java.util.Optional;
 
 @Mixin(InventoryLargeChest.class)
-public abstract class MixinInventoryLargeChest implements MinecraftInventoryAdapter<IInventory>, CarriedInventory<TileEntityCarrier>, ReusableLensProvider<IInventory, ItemStack> {
+public abstract class MixinInventoryLargeChest implements MinecraftInventoryAdapter<IInventory>, CarriedInventory<MultiBlockCarrier>, ReusableLensProvider<IInventory, ItemStack>,
+        MultiBlockCarrier {
 
     @Shadow @Final private ILockableContainer upperChest;
     @Shadow @Final private ILockableContainer lowerChest;
@@ -81,7 +82,37 @@ public abstract class MixinInventoryLargeChest implements MinecraftInventoryAdap
     }
 
     @Override
-    public Optional<TileEntityCarrier> getCarrier() {
-        return Optional.of(((TileEntityCarrier) upperChest));
+    public Optional<MultiBlockCarrier> getCarrier() {
+        return Optional.of(this);
+    }
+
+    @Override
+    public List<Location<World>> getLocations() {
+        List<Location<World>> list = new ArrayList<>();
+        if (this.upperChest instanceof TileEntity) {
+            list.add(((TileEntity) this.upperChest).getLocation());
+        }
+        if (this.lowerChest instanceof TileEntity) {
+            list.add(((TileEntity) this.lowerChest).getLocation());
+        }
+        return Collections.unmodifiableList(list);
+    }
+
+    @Override
+    public Optional<Inventory> getInventory(Location<World> at) {
+        if (this.getLocations().contains(at)) {
+            return Optional.of(this);
+        }
+        return Optional.empty();
+    }
+
+    @Override
+    public Optional<Inventory> getInventory(Location<World> at, Direction from) {
+        return this.getInventory(at);
+    }
+
+    @Override
+    public CarriedInventory<? extends Carrier> getInventory() {
+        return this;
     }
 }
