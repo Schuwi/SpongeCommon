@@ -27,23 +27,13 @@ package org.spongepowered.common.interfaces;
 import org.spongepowered.api.item.inventory.Inventory;
 import org.spongepowered.api.item.inventory.SingleBlockCarrier;
 import org.spongepowered.api.util.Direction;
-import org.spongepowered.api.world.Location;
-import org.spongepowered.api.world.World;
 
 import java.util.Optional;
 
 public interface IMixinSingleBlockCarrier extends SingleBlockCarrier {
 
     @Override
-    default Optional<Inventory> getInventory(Location<World> at) {
-        if (this.getLocation().equals(at)) {
-            return Optional.of(this.getInventory());
-        }
-        return Optional.empty();
-    }
-
-    @Override
-    default Optional<Inventory> getInventory(Location<World> at, Direction from) {
-        return this.getInventory(at);
+    default Optional<Inventory> getInventory(Direction from) {
+        return Optional.ofNullable(this.getInventory());
     }
 }
