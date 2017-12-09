@@ -22,7 +22,7 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package org.spongepowered.common.command;
+package org.spongepowered.common.command.dispatcher;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 import static org.spongepowered.api.command.CommandMessageFormatting.SPACE_TEXT;
@@ -42,6 +42,7 @@ import org.spongepowered.api.command.CommandMapping;
 import org.spongepowered.api.command.CommandMessageFormatting;
 import org.spongepowered.api.command.CommandNotFoundException;
 import org.spongepowered.api.command.CommandSource;
+import org.spongepowered.api.command.dispatcher.CommandNode;
 import org.spongepowered.api.command.dispatcher.Disambiguator;
 import org.spongepowered.api.command.dispatcher.Dispatcher;
 import org.spongepowered.api.event.cause.Cause;
@@ -52,6 +53,8 @@ import org.spongepowered.api.text.format.TextStyles;
 import org.spongepowered.api.util.StartsWithPredicate;
 import org.spongepowered.api.world.Location;
 import org.spongepowered.api.world.World;
+import org.spongepowered.common.command.SpongeCommandMapping;
+import org.spongepowered.common.command.dispatcher.SpongeCommandNode;
 
 import java.util.Arrays;
 import java.util.Collection;
@@ -59,6 +62,7 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.function.Function;
@@ -290,6 +294,16 @@ public class SpongeDispatcher implements Dispatcher {
         }
 
         return false;
+    }
+
+    @Override
+    public Optional<? extends CommandNode> getCommandNode(String alias) {
+        return get(alias).map(SpongeCommandNode::new);
+    }
+
+    @Override
+    public Map<String, ? extends CommandNode> getCommandNodes() {
+        return getPrimaryAliases().stream().collect(Collectors.toMap(k -> k, v -> new SpongeCommandNode(get(v).get())));
     }
 
     @Override

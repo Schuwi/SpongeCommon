@@ -35,35 +35,35 @@ import com.google.common.collect.Maps;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.Sets;
 import org.spongepowered.api.Sponge;
-import org.spongepowered.api.command.CommandResult;
 import org.spongepowered.api.command.Command;
 import org.spongepowered.api.command.CommandException;
 import org.spongepowered.api.command.CommandMapping;
 import org.spongepowered.api.command.CommandMessageFormatting;
 import org.spongepowered.api.command.CommandPermissionException;
+import org.spongepowered.api.command.CommandResult;
 import org.spongepowered.api.command.CommandSource;
+import org.spongepowered.api.command.dispatcher.CommandNode;
 import org.spongepowered.api.command.dispatcher.Dispatcher;
-import org.spongepowered.api.command.parameter.CommandContext;
-import org.spongepowered.api.command.parameter.ArgumentParseException;
-import org.spongepowered.api.command.parameter.token.InputTokenizer;
 import org.spongepowered.api.command.managed.ChildExceptionBehavior;
 import org.spongepowered.api.command.managed.CommandExecutor;
+import org.spongepowered.api.command.parameter.ArgumentParseException;
+import org.spongepowered.api.command.parameter.CommandContext;
+import org.spongepowered.api.command.parameter.Parameter;
+import org.spongepowered.api.command.parameter.flag.Flags;
+import org.spongepowered.api.command.parameter.token.CommandArgs;
+import org.spongepowered.api.command.parameter.token.InputTokenizer;
 import org.spongepowered.api.command.source.ConsoleSource;
 import org.spongepowered.api.event.cause.Cause;
 import org.spongepowered.api.text.Text;
 import org.spongepowered.api.text.format.TextColors;
 import org.spongepowered.api.world.Location;
 import org.spongepowered.api.world.World;
-import org.spongepowered.api.command.parameter.Parameter;
-import org.spongepowered.api.command.parameter.flag.Flags;
-import org.spongepowered.api.command.parameter.token.CommandArgs;
 import org.spongepowered.common.command.SpongeCommandMapping;
+import org.spongepowered.common.command.dispatcher.SpongeCommandNode;
+import org.spongepowered.common.command.managed.childexception.ChildCommandException;
 import org.spongepowered.common.command.parameter.flag.NoFlags;
 import org.spongepowered.common.command.parameter.token.SpongeCommandArgs;
-import org.spongepowered.common.command.managed.childexception.ChildCommandException;
 import org.spongepowered.common.service.pagination.PaginationCalculator;
-
-import javax.annotation.Nullable;
 
 import java.util.Collections;
 import java.util.Comparator;
@@ -76,6 +76,8 @@ import java.util.SortedMap;
 import java.util.TreeSet;
 import java.util.function.Function;
 import java.util.stream.Collectors;
+
+import javax.annotation.Nullable;
 
 public class SpongeManagedCommand implements Command, Dispatcher {
 
@@ -416,6 +418,21 @@ public class SpongeManagedCommand implements Command, Dispatcher {
     @Override
     public boolean containsMapping(CommandMapping mapping) {
         return this.mappings.containsValue(mapping);
+    }
+
+    @Override
+    public Optional<? extends CommandNode> getCommandNode(String alias) {
+        return get(alias).map(SpongeCommandNode::new);
+    }
+
+    @Override
+    public Map<String, ? extends CommandNode> getCommandNodes() {
+        Map<String, CommandNode> nodeMap = Maps.newHashMap();
+        for (String alias : this.primaryAliases) {
+            getCommandNode(alias).ifPresent(x -> nodeMap.put(alias, x));
+        }
+
+        return nodeMap;
     }
 
 }

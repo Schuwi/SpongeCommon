@@ -35,7 +35,7 @@ import org.spongepowered.api.command.CommandResult;
 import org.spongepowered.api.command.CommandSource;
 import org.spongepowered.api.event.cause.Cause;
 import org.spongepowered.api.event.cause.EventContext;
-import org.spongepowered.common.command.SpongeDispatcher;
+import org.spongepowered.common.command.dispatcher.SpongeDispatcher;
 import org.spongepowered.lwts.runner.LaunchWrapperTestRunner;
 
 /**

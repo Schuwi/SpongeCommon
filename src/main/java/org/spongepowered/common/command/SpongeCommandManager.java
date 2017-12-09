@@ -42,13 +42,12 @@ import org.spongepowered.api.command.CommandPermissionException;
 import org.spongepowered.api.command.CommandResult;
 import org.spongepowered.api.command.CommandSource;
 import org.spongepowered.api.command.InvocationCommandException;
+import org.spongepowered.api.command.dispatcher.CommandNode;
 import org.spongepowered.api.command.dispatcher.Disambiguator;
 import org.spongepowered.api.command.format.CommandMessageFormats;
-import org.spongepowered.api.event.CauseStackManager;
 import org.spongepowered.api.event.CauseStackManager.StackFrame;
 import org.spongepowered.api.event.SpongeEventFactory;
 import org.spongepowered.api.event.cause.Cause;
-import org.spongepowered.api.event.cause.EventContextKey;
 import org.spongepowered.api.event.cause.EventContextKeys;
 import org.spongepowered.api.event.command.CommandExecutionEvent;
 import org.spongepowered.api.event.command.TabCompleteEvent;
@@ -61,6 +60,7 @@ import org.spongepowered.api.util.TextMessageException;
 import org.spongepowered.api.world.Location;
 import org.spongepowered.api.world.World;
 import org.spongepowered.common.SpongeImpl;
+import org.spongepowered.common.command.dispatcher.SpongeDispatcher;
 import org.spongepowered.common.event.SpongeCauseStackManager;
 import org.spongepowered.common.event.tracking.phase.general.CommandPhaseContext;
 import org.spongepowered.common.event.tracking.phase.general.GeneralPhase;
@@ -79,6 +79,7 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 import javax.annotation.Nullable;
 import javax.inject.Inject;
@@ -291,6 +292,16 @@ public class SpongeCommandManager implements CommandManager {
     @Override
     public boolean containsMapping(CommandMapping mapping) {
         return this.dispatcher.containsMapping(mapping);
+    }
+
+    @Override
+    public Optional<? extends CommandNode> getCommandNode(String alias) {
+        return this.dispatcher.getCommandNode(alias);
+    }
+
+    @Override
+    public Map<String, ? extends CommandNode> getCommandNodes() {
+        return this.dispatcher.getCommandNodes();
     }
 
     @Override

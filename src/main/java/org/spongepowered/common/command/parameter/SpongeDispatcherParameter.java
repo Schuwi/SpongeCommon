@@ -31,7 +31,6 @@ import org.spongepowered.api.command.Command;
 import org.spongepowered.api.command.CommandException;
 import org.spongepowered.api.command.CommandMapping;
 import org.spongepowered.api.command.CommandResult;
-import org.spongepowered.api.command.CommandSource;
 import org.spongepowered.api.command.parameter.ArgumentParseException;
 import org.spongepowered.api.command.parameter.CommandContext;
 import org.spongepowered.api.command.parameter.Parameter;
@@ -39,7 +38,7 @@ import org.spongepowered.api.command.parameter.token.CommandArgs;
 import org.spongepowered.api.command.managed.CommandExecutor;
 import org.spongepowered.api.event.cause.Cause;
 import org.spongepowered.api.text.Text;
-import org.spongepowered.common.command.SpongeDispatcher;
+import org.spongepowered.common.command.dispatcher.SpongeDispatcher;
 import org.spongepowered.common.command.managed.SpongeManagedCommand;
 
 import java.util.List;

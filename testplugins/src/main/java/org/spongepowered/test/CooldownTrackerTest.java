@@ -25,10 +25,9 @@
 package org.spongepowered.test;
 
 import org.spongepowered.api.Sponge;
-import org.spongepowered.api.command.CommandException;
+import org.spongepowered.api.command.Command;
 import org.spongepowered.api.command.CommandResult;
-import org.spongepowered.api.command.args.GenericArguments;
-import org.spongepowered.api.command.spec.CommandSpec;
+import org.spongepowered.api.command.parameter.Parameter;
 import org.spongepowered.api.data.type.HandTypes;
 import org.spongepowered.api.entity.living.player.CooldownTracker;
 import org.spongepowered.api.entity.living.player.Player;
@@ -48,12 +47,8 @@ public final class CooldownTrackerTest {
     @Listener
     public void onInit(GameInitializationEvent event) {
         Sponge.getCommandManager().register(this,
-                CommandSpec.builder()
-                        .executor((src, args) -> {
-                            if (!(src instanceof Player)) {
-                                throw new CommandException(Text.of(TextColors.RED, "You must be a player to execute this command!"));
-                            }
-                            final Player player = (Player) src;
+                Command.builder()
+                        .targetedExecutor((cause, player, args) -> {
                             final CooldownTracker cooldownTracker = player.getCooldownTracker();
                             final ItemType itemType = player.getItemInHand(HandTypes.MAIN_HAND).orElse(ItemStack.empty()).getType();
                             if (!cooldownTracker.hasCooldown(itemType)) {
@@ -66,25 +61,21 @@ public final class CooldownTrackerTest {
                                         TextColors.GRAY, " of its cooldown remaining."));
                             }
                             return CommandResult.success();
-                        })
+                        }, Player.class)
                         .build(),
                 "cooldowntest");
 
         Sponge.getCommandManager().register(this,
-                CommandSpec.builder()
-                        .executor((src, args) -> {
-                            if (!(src instanceof Player)) {
-                                throw new CommandException(Text.of(TextColors.RED, "You must be a player to execute this command!"));
-                            }
-                            final Player player = (Player) src;
+                Command.builder()
+                        .parameter(Parameter.integerNumber().setKey("cooldown").onlyOne().optional().build())
+                        .targetedExecutor((cause, player, args) -> {
                             final int cooldown = args.<Integer>getOne("cooldown").orElse(10);
                             player.getCooldownTracker().setCooldown(player.getItemInHand(HandTypes.MAIN_HAND)
                                     .orElse(ItemStack.empty()).getType(), cooldown);
                             player.sendMessage(Text.of(TextColors.GRAY, "You have given the item type in your hand a cooldown of ",
                                     TextColors.GOLD, cooldown, TextColors.GRAY, " tick(s)."));
                             return CommandResult.success();
-                        })
-                        .arguments(GenericArguments.integer(Text.of("cooldown")))
+                        }, Player.class)
                         .build(),
                 "cooldownset");
     }
