@@ -54,6 +54,7 @@ import org.spongepowered.common.interfaces.world.IMixinWorldServer;
 import org.spongepowered.common.registry.type.world.BlockChangeFlagRegistryModule;
 import org.spongepowered.common.util.SpongeHooks;
 import org.spongepowered.common.world.BlockChange;
+import org.spongepowered.common.world.SpongeBlockChangeFlag;
 import org.spongepowered.common.world.SpongeProxyBlockAccess;
 
 import java.util.ArrayList;
@@ -215,7 +216,7 @@ public final class GeneralPhase extends TrackingPhase {
             final WorldServer worldServer = mixinWorldServer.asMinecraftWorld();
             SpongeHooks.logBlockAction(worldServer, oldBlockSnapshot.blockChange, transaction);
             final BlockChangeFlag changeFlag = oldBlockSnapshot.getChangeFlag();
-            final int updateFlag = changeFlag.updateNeighbors() ? BlockChangeFlagRegistryModule.Flags.NEIGHBOR_MASK : 0;
+            final int updateFlag = ((SpongeBlockChangeFlag) changeFlag).getRawFlag();
             final IBlockState originalState = (IBlockState) oldBlockSnapshot.getState();
             final IBlockState newState = (IBlockState) newBlockSnapshot.getState();
             // Containers get placed automatically

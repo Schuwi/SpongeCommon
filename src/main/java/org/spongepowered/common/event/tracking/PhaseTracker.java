@@ -62,6 +62,7 @@ import org.spongepowered.common.entity.EntityUtil;
 import org.spongepowered.common.entity.PlayerTracker;
 import org.spongepowered.common.event.tracking.phase.TrackingPhase;
 import org.spongepowered.common.event.tracking.phase.general.GeneralPhase;
+import org.spongepowered.common.interfaces.IMixinChunk;
 import org.spongepowered.common.interfaces.entity.IMixinEntity;
 import org.spongepowered.common.interfaces.world.IMixinWorldServer;
 import org.spongepowered.common.registry.type.event.InternalSpawnTypes;
@@ -635,6 +636,48 @@ public final class PhaseTracker {
         return true;
         // } // Sponge - unnecessary formatting
 
+    }
+
+    public boolean setBlockStateWithFlag(final IMixinWorldServer mixinWorld, final BlockPos pos, final IBlockState newState, BlockChangeFlag flag) {
+        final net.minecraft.world.World minecraftWorld = mixinWorld.asMinecraftWorld();
+        final Chunk chunk = minecraftWorld.getChunkFromBlockCoords(pos);
+        final IMixinChunk mixinChunk = (IMixinChunk) chunk;
+        final Block newBlock = newState.getBlock();
+        // Sponge Start - Up to this point, we've copied exactly what Vanilla minecraft does.
+        final IBlockState currentState = chunk.getBlockState(pos);
+
+        if (currentState == newState) {
+            // Some micro optimization in case someone is trying to set the new state to the same as current
+            return false;
+        }
+
+        // Sponge End - continue with vanilla mechanics
+        final IBlockState iblockstate = mixinChunk.setBlockState(pos, newState, currentState, null, flag);
+
+        if (iblockstate == null) {
+            return false;
+        }
+        if (newState.getLightOpacity() != iblockstate.getLightOpacity() || newState.getLightValue() != iblockstate.getLightValue()) {
+            minecraftWorld.profiler.startSection("checkLight");
+            minecraftWorld.checkLight(pos);
+            minecraftWorld.profiler.endSection();
+        }
+
+        if (chunk.isPopulated()) {
+            minecraftWorld.notifyBlockUpdate(pos, iblockstate, newState, flag.updateNeighbors() ? 3 : 2);
+        }
+
+        if (flag.updateNeighbors()) { // Sponge - remove the isRemote check
+            minecraftWorld.notifyNeighborsRespectDebug(pos, iblockstate.getBlock(), true);
+
+            if (newState.hasComparatorInputOverride()) {
+                minecraftWorld.updateComparatorOutputLevel(pos, newBlock);
+            }
+        }
+
+        // TODO - Add Observer block change flag
+
+        return true;
     }
 
     /**
