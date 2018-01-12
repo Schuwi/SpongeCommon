@@ -26,10 +26,12 @@ package org.spongepowered.common.mixin.core.entity.player;
 
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
+import static com.google.common.base.Preconditions.checkState;
 
 import com.flowpowered.math.vector.Vector3d;
 import com.flowpowered.math.vector.Vector3i;
 import com.google.common.collect.Sets;
+import net.minecraft.advancements.PlayerAdvancements;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.command.ICommandSender;
 import net.minecraft.entity.Entity;
@@ -84,6 +86,9 @@ import net.minecraft.world.GameType;
 import net.minecraft.world.IInteractionObject;
 import org.objectweb.asm.Opcodes;
 import org.spongepowered.api.Sponge;
+import org.spongepowered.api.advancement.Advancement;
+import org.spongepowered.api.advancement.AdvancementProgress;
+import org.spongepowered.api.advancement.AdvancementTree;
 import org.spongepowered.api.block.BlockState;
 import org.spongepowered.api.command.CommandSource;
 import org.spongepowered.api.data.key.Keys;
@@ -115,6 +120,7 @@ import org.spongepowered.api.item.inventory.Inventory;
 import org.spongepowered.api.item.inventory.ItemStackSnapshot;
 import org.spongepowered.api.item.inventory.entity.Hotbar;
 import org.spongepowered.api.item.inventory.property.SlotIndex;
+import org.spongepowered.api.item.inventory.query.QueryOperationTypes;
 import org.spongepowered.api.item.inventory.transaction.SlotTransaction;
 import org.spongepowered.api.item.inventory.type.CarriedInventory;
 import org.spongepowered.api.network.PlayerConnection;
@@ -168,6 +174,8 @@ import org.spongepowered.common.interfaces.IMixinPacketResourcePackSend;
 import org.spongepowered.common.interfaces.IMixinServerScoreboard;
 import org.spongepowered.common.interfaces.IMixinSubject;
 import org.spongepowered.common.interfaces.IMixinTeam;
+import org.spongepowered.common.interfaces.advancement.IMixinAdvancement;
+import org.spongepowered.common.interfaces.advancement.IMixinPlayerAdvancements;
 import org.spongepowered.common.interfaces.entity.IMixinEntity;
 import org.spongepowered.common.interfaces.entity.player.IMixinEntityPlayerMP;
 import org.spongepowered.common.interfaces.network.IMixinNetHandlerPlayServer;
@@ -201,6 +209,7 @@ public abstract class MixinEntityPlayerMP extends MixinEntityPlayer implements P
 
     @Shadow @Final public MinecraftServer mcServer;
     @Shadow @Final public PlayerInteractionManager interactionManager;
+    @Shadow @Final private PlayerAdvancements advancements;
     @Shadow private String language;
     @Shadow public NetHandlerPlayServer connection;
     @Shadow public int lastExperience;
@@ -912,7 +921,9 @@ public abstract class MixinEntityPlayerMP extends MixinEntityPlayer implements P
         }
 
         // Add SlotTransaction to PlayerContainer
-        org.spongepowered.api.item.inventory.Slot slot = ((Inventory) this.inventoryContainer).query(Hotbar.class).query(SlotIndex.of(this.inventory.currentItem));
+        org.spongepowered.api.item.inventory.Slot slot = ((Inventory) this.inventoryContainer)
+                .query(QueryOperationTypes.INVENTORY_TYPE.of(Hotbar.class))
+                .query(QueryOperationTypes.INVENTORY_PROPERTY.of(SlotIndex.of(this.inventory.currentItem)));
         ItemStack itemToDrop = this.inventory.decrStackSize(this.inventory.currentItem, dropAll && !currentItem.isEmpty() ? currentItem.getCount() : 1);
         ((IMixinContainer) this.inventoryContainer).getCapturedTransactions().add(new SlotTransaction(slot, ItemStackUtil.snapshotOf(currentItem), ItemStackUtil.snapshotOf(this.inventory.getCurrentItem())));
 
@@ -1157,5 +1168,27 @@ public abstract class MixinEntityPlayerMP extends MixinEntityPlayer implements P
     @Override
     public CooldownTracker getCooldownTracker() {
         return (CooldownTracker) shadow$getCooldownTracker();
+    }
+
+    @Redirect(method = "readEntityFromNBT", at = @At(value = "INVOKE", target = "Lnet/minecraft/server/MinecraftServer;getForceGamemode()Z"))
+    private boolean onCheckForcedGameMode(MinecraftServer minecraftServer) {
+        return minecraftServer.getForceGamemode() && !hasForcedGamemodeOverridePermission();
+    }
+
+    @Override
+    public boolean hasForcedGamemodeOverridePermission() {
+        return this.hasPermission(getActiveContexts(), "minecraft.force-gamemode.override");
+    }
+
+    @Override
+    public AdvancementProgress getProgress(Advancement advancement) {
+        checkNotNull(advancement, "advancement");
+        checkState(((IMixinAdvancement) advancement).isRegistered(), "The advancement must be registered");
+        return (AdvancementProgress) this.advancements.getProgress((net.minecraft.advancements.Advancement) advancement);
+    }
+
+    @Override
+    public Collection<AdvancementTree> getUnlockedAdvancementTrees() {
+        return ((IMixinPlayerAdvancements) this.advancements).getAdvancementTrees();
     }
 }

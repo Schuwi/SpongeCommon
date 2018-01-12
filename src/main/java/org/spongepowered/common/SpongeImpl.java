@@ -26,6 +26,7 @@ package org.spongepowered.common;
 
 import static com.google.common.base.Preconditions.checkState;
 import static org.spongepowered.api.Platform.Component.IMPLEMENTATION;
+import static org.spongepowered.common.config.SpongeConfig.Type.CUSTOM_DATA;
 import static org.spongepowered.common.config.SpongeConfig.Type.GLOBAL;
 
 import com.google.inject.Inject;
@@ -42,6 +43,7 @@ import org.spongepowered.api.event.SpongeEventFactory;
 import org.spongepowered.api.event.game.state.GameStateEvent;
 import org.spongepowered.api.plugin.PluginContainer;
 import org.spongepowered.common.config.SpongeConfig;
+import org.spongepowered.common.config.type.CustomDataConfig;
 import org.spongepowered.common.config.type.GlobalConfig;
 import org.spongepowered.common.data.SpongeDataManager;
 import org.spongepowered.common.data.property.SpongePropertyRegistry;
@@ -80,6 +82,7 @@ public final class SpongeImpl {
     // Can't @Inject these because they are referenced before everything is initialized
     @Nullable private static SpongeConfig<GlobalConfig> globalConfig;
     @Nullable private static PluginContainer minecraftPlugin;
+    @Nullable private static SpongeConfig<CustomDataConfig> customDataConfig;
 
     @Inject private static SpongeGame game;
 
@@ -189,6 +192,13 @@ public final class SpongeImpl {
         return globalConfig;
     }
 
+    public static SpongeConfig<CustomDataConfig> getDataConfig() {
+        if (customDataConfig == null) {
+            customDataConfig = new SpongeConfig<>(CUSTOM_DATA, getSpongeConfigDir().resolve("custom_data.conf"), ECOSYSTEM_ID);
+        }
+        return customDataConfig;
+    }
+
     public static List<PluginContainer> getInternalPlugins() {
         return internalPlugins;
     }
@@ -197,10 +207,18 @@ public final class SpongeImpl {
         return Sponge.getEventManager().post(event);
     }
 
+    public static boolean postEvent(Event event, boolean allowClient) {
+        // TODO quick and dirty fix (cant cast in UnitTest)
+        if (Sponge.getEventManager() instanceof SpongeEventManager) {
+            return ((SpongeEventManager) Sponge.getEventManager()).post(event, allowClient);
+        }
+        return true;
+    }
+
     public static void postState(GameState state, GameStateEvent event) {
         check(game);
         game.setState(state);
-        ((SpongeEventManager) game.getEventManager()).post(event, true);
+        postEvent(event, true);
     }
 
     public static void postShutdownEvents() {
@@ -226,5 +244,12 @@ public final class SpongeImpl {
         }
 
         return containerOptional.get();
+    }
+
+    public static boolean isMainThread() {
+        // Return true when the server isn't yet initialized, this means on a client
+        // that the game is still being loaded. This is needed to support initialization
+        // events with cause tracking.
+        return !Sponge.isServerAvailable() || Sponge.getServer().isMainThread();
     }
 }

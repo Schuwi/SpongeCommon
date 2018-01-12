@@ -149,6 +149,7 @@ import org.spongepowered.common.SpongeImplHooks;
 import org.spongepowered.common.block.SpongeBlockSnapshot;
 import org.spongepowered.common.config.SpongeConfig;
 import org.spongepowered.common.config.category.WorldCategory;
+import org.spongepowered.common.config.type.GeneralConfigBase;
 import org.spongepowered.common.config.type.WorldConfig;
 import org.spongepowered.common.data.util.DataQueries;
 import org.spongepowered.common.effect.particle.SpongeParticleEffect;
@@ -188,7 +189,7 @@ import org.spongepowered.common.interfaces.world.gen.IPopulatorProvider;
 import org.spongepowered.common.mixin.plugin.entityactivation.interfaces.IModData_Activation;
 import org.spongepowered.common.mixin.plugin.entitycollisions.interfaces.IModData_Collisions;
 import org.spongepowered.common.registry.provider.DirectionFacingProvider;
-import org.spongepowered.common.registry.type.world.BlockChangeFlagRegistryModule;
+import org.spongepowered.common.util.NonNullArrayList;
 import org.spongepowered.common.util.SpongeHooks;
 import org.spongepowered.common.util.VecHelper;
 import org.spongepowered.common.world.SpongeBlockChangeFlag;
@@ -232,7 +233,7 @@ public abstract class MixinWorldServer extends MixinWorld implements IMixinWorld
 
     private final Map<net.minecraft.entity.Entity, Vector3d> rotationUpdates = new HashMap<>();
     private SpongeChunkGenerator spongegen;
-    private SpongeConfig<?> activeConfig;
+    private SpongeConfig<? extends GeneralConfigBase> activeConfig;
     private long weatherStartTime;
     private Weather prevWeather;
     protected WorldTimingsHandler timings;
@@ -398,12 +399,12 @@ public abstract class MixinWorldServer extends MixinWorld implements IMixinWorld
 
 
     @Override
-    public SpongeConfig<?> getActiveConfig() {
+    public SpongeConfig<? extends GeneralConfigBase> getActiveConfig() {
         return this.activeConfig;
     }
 
     @Override
-    public void setActiveConfig(SpongeConfig<?> config) {
+    public void setActiveConfig(SpongeConfig<? extends GeneralConfigBase> config) {
         this.activeConfig = config;
         // update cached settings
         this.chunkGCLoadThreshold = this.activeConfig.getConfig().getWorld().getChunkLoadThreadhold();
@@ -1101,17 +1102,18 @@ public abstract class MixinWorldServer extends MixinWorld implements IMixinWorld
     }
 
     @Override
-    public boolean spawnEntities(Iterable<? extends Entity> entities) {
-        List<Entity> entitiesToSpawn = new ArrayList<>();
+    public Collection<Entity> spawnEntities(Iterable<? extends Entity> entities) {
+        List<Entity> entitiesToSpawn = new NonNullArrayList<>();
         entities.forEach(entitiesToSpawn::add);
         final SpawnEntityEvent.Custom event = SpongeEventFactory.createSpawnEntityEventCustom(Sponge.getCauseStackManager().getCurrentCause(), entitiesToSpawn);
-        SpongeImpl.postEvent(event);
-        if (!event.isCancelled()) {
-            for (Entity entity : event.getEntities()) {
-                this.forceSpawnEntity(entity);
-            }
+        if (Sponge.getEventManager().post(event)) {
+            return ImmutableList.of();
         }
-        return event.isCancelled();
+        for (Entity entity : event.getEntities()) {
+            this.forceSpawnEntity(entity);
+        }
+
+        return event.getEntities().stream().filter(Entity::isLoaded).collect(ImmutableList.toImmutableList());
     }
 
     /**
@@ -1511,6 +1513,7 @@ public abstract class MixinWorldServer extends MixinWorld implements IMixinWorld
 
     @Override
     public boolean spawnEntity(Entity entity) {
+        checkNotNull(entity, "The entity cannot be null!");
         if (!PhaseTracker.validateEntitySpawn(this, entity)) {
             return true;
         }
@@ -2318,7 +2321,7 @@ public abstract class MixinWorldServer extends MixinWorld implements IMixinWorld
     @Override
     public void setViewDistance(final int viewDistance) {
         this.setMemoryViewDistance(viewDistance);
-        final SpongeConfig<?> config = this.getActiveConfig();
+        final SpongeConfig<? extends GeneralConfigBase> config = this.getActiveConfig();
         // don't use the parameter, use the field that has been clamped
         config.getConfig().getWorld().setViewDistance(this.playerChunkMap.playerViewRadius);
         config.save();

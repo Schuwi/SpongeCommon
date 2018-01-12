@@ -24,7 +24,7 @@
  */
 package org.spongepowered.common.event.tracking.phase.general;
 
-import org.spongepowered.common.event.tracking.GeneralizedContext;
+import org.spongepowered.common.event.tracking.context.GeneralizedContext;
 import org.spongepowered.common.event.tracking.IPhaseState;
 
 final class CompletePhase extends GeneralState<GeneralizedContext> {

@@ -34,24 +34,21 @@ import org.spongepowered.api.block.BlockSnapshot;
 import org.spongepowered.api.data.Transaction;
 import org.spongepowered.api.entity.Entity;
 import org.spongepowered.api.event.block.ChangeBlockEvent;
-import org.spongepowered.api.world.BlockChangeFlag;
 import org.spongepowered.api.world.BlockChangeFlags;
 import org.spongepowered.api.world.Location;
 import org.spongepowered.api.world.World;
 import org.spongepowered.common.SpongeImplHooks;
 import org.spongepowered.common.block.SpongeBlockSnapshot;
-import org.spongepowered.common.event.tracking.CapturedMultiMapSupplier;
-import org.spongepowered.common.event.tracking.CapturedSupplier;
-import org.spongepowered.common.event.tracking.GeneralizedContext;
+import org.spongepowered.common.event.tracking.context.CapturedMultiMapSupplier;
+import org.spongepowered.common.event.tracking.context.CapturedSupplier;
+import org.spongepowered.common.event.tracking.context.GeneralizedContext;
 import org.spongepowered.common.event.tracking.IPhaseState;
-import org.spongepowered.common.event.tracking.ItemDropData;
+import org.spongepowered.common.event.tracking.context.ItemDropData;
 import org.spongepowered.common.event.tracking.PhaseContext;
 import org.spongepowered.common.event.tracking.TrackingUtil;
-import org.spongepowered.common.event.tracking.UnwindingPhaseContext;
 import org.spongepowered.common.event.tracking.phase.TrackingPhase;
 import org.spongepowered.common.interfaces.world.IMixinLocation;
 import org.spongepowered.common.interfaces.world.IMixinWorldServer;
-import org.spongepowered.common.registry.type.world.BlockChangeFlagRegistryModule;
 import org.spongepowered.common.util.SpongeHooks;
 import org.spongepowered.common.world.BlockChange;
 import org.spongepowered.common.world.SpongeBlockChangeFlag;
@@ -208,10 +205,9 @@ public final class GeneralPhase extends TrackingPhase {
             final IMixinWorldServer mixinWorldServer = (IMixinWorldServer) worldLocation.getExtent();
             final BlockPos pos = ((IMixinLocation) (Object) worldLocation).getBlockPos();
             capturedBlockDrops.acceptAndRemoveIfPresent(pos, items -> TrackingUtil
-                    .spawnItemDataForBlockDrops(items, newBlockSnapshot, unwindingPhaseContext, unwindingState));
+                    .spawnItemDataForBlockDrops(items, oldBlockSnapshot, unwindingPhaseContext, unwindingState));
             capturedBlockItemEntityDrops.acceptAndRemoveIfPresent(pos, items -> TrackingUtil
-                    .spawnItemEntitiesForBlockDrops(items, newBlockSnapshot,
-                        unwindingPhaseContext, unwindingState));
+                    .spawnItemEntitiesForBlockDrops(items, oldBlockSnapshot, unwindingPhaseContext, unwindingState));
 
             final WorldServer worldServer = mixinWorldServer.asMinecraftWorld();
             SpongeHooks.logBlockAction(worldServer, oldBlockSnapshot.blockChange, transaction);

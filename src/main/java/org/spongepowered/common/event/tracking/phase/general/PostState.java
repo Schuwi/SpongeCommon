@@ -34,7 +34,6 @@ import org.spongepowered.common.event.tracking.IPhaseState;
 import org.spongepowered.common.event.tracking.PhaseContext;
 import org.spongepowered.common.event.tracking.PhaseData;
 import org.spongepowered.common.event.tracking.TrackingUtil;
-import org.spongepowered.common.event.tracking.UnwindingPhaseContext;
 import org.spongepowered.common.event.tracking.phase.TrackingPhases;
 import org.spongepowered.common.event.tracking.phase.block.BlockPhase;
 
@@ -45,7 +44,7 @@ final class PostState extends GeneralState<UnwindingPhaseContext> {
 
     @Override
     public UnwindingPhaseContext createPhaseContext() {
-        return null;
+        throw new UnsupportedOperationException("Use UnwindingPhaseContext#unwind(IPhaseState, PhaseContext)! Cannot create a context based on Post state!");
     }
 
     @Override
@@ -53,6 +52,8 @@ final class PostState extends GeneralState<UnwindingPhaseContext> {
         return state.getPhase() == TrackingPhases.GENERATION
                 || state.getPhase() == TrackingPhases.PLUGIN
                 || state == BlockPhase.State.RESTORING_BLOCKS
+                // Plugins can call commands during event listeners.
+                || state == GeneralPhase.State.COMMAND
                 // Decay can be caused when a block is performing a lot of
                 // changes in place
                 || state == BlockPhase.State.BLOCK_DECAY;

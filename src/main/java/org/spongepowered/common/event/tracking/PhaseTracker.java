@@ -60,10 +60,9 @@ import org.spongepowered.common.SpongeImpl;
 import org.spongepowered.common.SpongeImplHooks;
 import org.spongepowered.common.entity.EntityUtil;
 import org.spongepowered.common.entity.PlayerTracker;
+import org.spongepowered.common.event.tracking.phase.general.UnwindingPhaseContext;
 import org.spongepowered.common.event.tracking.phase.TrackingPhase;
-import org.spongepowered.common.event.tracking.phase.block.BlockPhase;
 import org.spongepowered.common.event.tracking.phase.general.GeneralPhase;
-import org.spongepowered.common.interfaces.IMixinChunk;
 import org.spongepowered.common.interfaces.entity.IMixinEntity;
 import org.spongepowered.common.interfaces.world.IMixinWorldServer;
 import org.spongepowered.common.registry.type.event.InternalSpawnTypes;
@@ -419,9 +418,10 @@ public final class PhaseTracker {
             ;
         printer
             .add(context.printCustom(printer));
+        Exception exception = new RuntimeException("Unknown Exception During Phase", e);
         printer.hr()
             .add("StackTrace:")
-            .add(new Exception(e));
+            .add(exception);
         printer.add(" Phases Remaining:");
         this.stack.forEach(data -> PHASE_PRINTER.accept(printer, data));
         printer.add();

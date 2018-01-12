@@ -54,9 +54,11 @@ import net.minecraft.world.WorldServer;
 import org.spongepowered.api.Sponge;
 import org.spongepowered.api.data.key.Keys;
 import org.spongepowered.api.data.manipulator.DataManipulator;
+import org.spongepowered.api.data.manipulator.mutable.entity.DamageableData;
 import org.spongepowered.api.data.manipulator.mutable.entity.HealthData;
 import org.spongepowered.api.data.value.mutable.MutableBoundedValue;
 import org.spongepowered.api.data.value.mutable.OptionalValue;
+import org.spongepowered.api.entity.EntitySnapshot;
 import org.spongepowered.api.entity.Transform;
 import org.spongepowered.api.entity.living.Living;
 import org.spongepowered.api.entity.projectile.Projectile;
@@ -77,6 +79,7 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
+import org.spongepowered.common.data.manipulator.mutable.entity.SpongeDamageableData;
 import org.spongepowered.common.data.manipulator.mutable.entity.SpongeHealthData;
 import org.spongepowered.common.data.value.SpongeValueFactory;
 import org.spongepowered.common.data.value.mutable.SpongeOptionalValue;
@@ -122,7 +125,7 @@ public abstract class MixinEntityLivingBase extends MixinEntity implements Livin
     @Shadow public boolean potionsNeedUpdate;
     @Shadow public boolean dead;
     @Shadow public CombatTracker _combatTracker;
-    @Shadow public EntityLivingBase revengeTarget;
+    @Shadow @Nullable public EntityLivingBase revengeTarget;
     @Shadow protected AbstractAttributeMap attributeMap;
     @Shadow protected int idleTime;
     @Shadow protected int recentlyHit;
@@ -181,6 +184,8 @@ public abstract class MixinEntityLivingBase extends MixinEntity implements Livin
         return false; // SHADOWED
     }
     @Shadow public abstract AbstractAttributeMap getAttributeMap();
+
+    @Shadow @Nullable public abstract EntityLivingBase getRevengeTarget();
 
     @Override
     public Vector3d getHeadRotation() {
@@ -890,20 +895,26 @@ public abstract class MixinEntityLivingBase extends MixinEntity implements Livin
                 .build();
     }
 
-    // TODO uncomment when the processor is implemented
-//    @Override
-//    public DamageableData getMortalData() {
-//        return null;
-//    }
+    @Override
+    public DamageableData getDamageableData() {
+        return new SpongeDamageableData((Living) this.revengeTarget, (double) this.lastDamage);
+    }
 
     @Override
-    public OptionalValue<Living> lastAttacker() {
-        return new SpongeOptionalValue<>(Keys.LAST_ATTACKER, Optional.ofNullable((Living) this.getLastAttackedEntity()));
+    public OptionalValue<EntitySnapshot> lastAttacker() {
+        return new SpongeOptionalValue<>(Keys.LAST_ATTACKER, Optional.empty(), Optional.ofNullable(this.revengeTarget == null ?
+                null : ((Living) this.revengeTarget).createSnapshot()));
     }
 
     @Override
     public OptionalValue<Double> lastDamage() {
-        return new SpongeOptionalValue<>(Keys.LAST_DAMAGE, Optional.ofNullable(this.getLastAttackedEntity() == null ? null : (double) this.lastDamage));
+        return new SpongeOptionalValue<>(Keys.LAST_DAMAGE, Optional.empty(), Optional.ofNullable(this.revengeTarget == null ?
+                null : (double) (this.lastDamage)));
+    }
+
+    @Override
+    public double getLastDamageTaken() {
+        return this.lastDamage;
     }
 
     @Override
